@@ -1,0 +1,3092 @@
+1.	Write a C program to convert a given Infix expression into its equivalent Postfix expression using stack.
+
+#include <stdio.h>
+
+#define n 10
+
+char stack[n];
+int top = -1;
+
+void push(char x) {
+    if (top == n - 1) {
+        printf("Full!");
+    } else {
+        top++;
+        stack[top] = x;
+    }
+}
+
+void pop() {
+    if (top == -1) {
+        printf("Empty!");
+    } else {
+        top--;
+    }
+}
+
+int precedence(char x) {
+    if (x == '(')
+        return 0;
+    if (x == '^')
+        return 1;
+    if (x == '*' || x == '/')
+        return 2;
+    if (x == '+' || x == '-')
+        return 3;
+    return -1; // Added to handle the case when x is not recognized
+}
+
+int main() {
+    char exp[n];
+    char *e, x;
+
+    printf("Enter the Characters: ");
+    scanf("%s", exp);
+
+    e = exp; // Initialize the pointer e
+
+    while (*e != '\0') {
+        if (isalnum(*e))
+            printf("%c", *e);
+        else if (*e == '(')
+            push(*e);
+        else if (*e == ')') {
+            while ((x = stack[top]) != '(') {
+                printf("%c", x);
+                pop();
+            }
+            pop(); // Pop the '('
+        } else {
+            while (top != -1 && precedence(stack[top]) >= precedence(*e)) {
+                printf("%c", stack[top]);
+                pop();
+            }
+            push(*e);
+        }
+        e++;
+    }
+
+    while (top != -1) {
+        printf("%c", stack[top]);
+        pop();
+    }
+
+    return 0;
+}
+
+
+
+
+
+2.	 Write a C program to convert a given Infix expression into its equivalent Prefix expression using stack
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_SIZE 100
+
+char stack[MAX_SIZE];
+int top = -1;
+
+void push(char x) {
+    if (top == MAX_SIZE - 1) {
+        printf("Full!");
+    } else {
+        top++;
+        stack[top] = x;
+    }
+}
+
+void pop() {
+    if (top == -1) {
+        printf("Empty!");
+    } else {
+        top--;
+    }
+}
+
+int precedence(char x) {
+    if (x == '(')
+        return 0;
+    if (x == '^')
+        return 1;
+    if (x == '*' || x == '/')
+        return 2;
+    if (x == '+' || x == '-')
+        return 3;
+    return -1; // Added to handle the case when x is not recognized
+}
+
+void reverseString(char str[]) {
+    int length = strlen(str);
+
+    for (int start = 0, end = length - 1; start < end; start++, end--) {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+    }
+}
+
+void infixToPrefix(char infix[]) {
+    // Reverse the infix expression
+    reverseString(infix);
+
+    char *e, x;
+    e = infix; // Initialize the pointer e
+
+    while (*e != '\0') {
+        if (isalnum(*e))
+            printf("%c", *e);
+        else if (*e == ')')
+            push(*e);
+        else if (*e == '(') {
+            while ((x = stack[top]) != ')') {
+                printf("%c", x);
+                pop();
+            }
+            pop(); // Pop the ')'
+        } else {
+            while (top != -1 && precedence(stack[top]) >= precedence(*e)) {
+                printf("%c", stack[top]);
+                pop();
+            }
+            push(*e);
+        }
+        e++;
+    }
+
+    while (top != -1) {
+        printf("%c", stack[top]);
+        pop();
+    }
+
+    // Reverse the result to get the final prefix expression
+    reverseString(stack);
+    printf("\nPrefix expression: %s\n", stack);
+}
+
+int main() {
+    char infix[MAX_SIZE];
+
+    printf("Enter an infix expression: ");
+    scanf("%s", infix);
+
+    infixToPrefix(infix);
+
+    return 0;
+}
+
+
+
+
+
+3.	Write a C program to convert a given Prefix expression into its equivalent Postfix expression using stack
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#define MAX_SIZE 100
+
+// Structure to represent a stack
+struct Stack {
+    int top;
+    unsigned capacity;
+    char **array;
+};
+
+// Function to initialize a stack
+struct Stack *createStack(unsigned capacity) {
+    struct Stack *stack = (struct Stack *)malloc(sizeof(struct Stack));
+    stack->top = -1;
+    stack->capacity = capacity;
+    stack->array = (char **)malloc(stack->capacity * sizeof(char *));
+    return stack;
+}
+
+// Function to push a string onto the stack
+void push(struct Stack *stack, char *item) {
+    if (stack->top == stack->capacity - 1) {
+        printf("Stack Overflow\n");
+        return;
+    }
+    stack->array[++stack->top] = item;
+}
+
+// Function to pop a string from the stack
+char *pop(struct Stack *stack) {
+    if (stack->top == -1) {
+        printf("Stack Underflow\n");
+        return NULL;
+    }
+    return stack->array[stack->top--];
+}
+
+// Function to check if the stack is empty
+int isEmpty(struct Stack *stack) {
+    return stack->top == -1;
+}
+
+// Function to check if a character is an operator
+int isOperator(char ch) {
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+}
+
+// Function to convert prefix expression to postfix
+void prefixToPostfix(char *prefixExpression) {
+    struct Stack *stack = createStack(strlen(prefixExpression));
+    int i;
+
+    // Traverse the prefix expression in reverse order
+    for (i = strlen(prefixExpression) - 1; i >= 0; i--) {
+        if (isalnum(prefixExpression[i])) {
+            // If operand, push onto the stack
+            char *operand = (char *)malloc(2 * sizeof(char));
+            operand[0] = prefixExpression[i];
+            operand[1] = '\0';
+            push(stack, operand);
+        } else if (isOperator(prefixExpression[i])) {
+            // If operator, pop two operands, concatenate them with the operator, and push the result back
+            char *operand1 = pop(stack);
+            char *operand2 = pop(stack);
+
+            char *result = (char *)malloc((strlen(operand1) + strlen(operand2) + 2) * sizeof(char));
+            sprintf(result, "%s%s%c", operand1, operand2, prefixExpression[i]);
+            push(stack, result);
+
+            // Free memory allocated for operands
+            free(operand1);
+            free(operand2);
+        }
+    }
+
+    // The final result is the postfix expression
+    char *finalResult = pop(stack);
+    printf("Postfix expression: %s\n", finalResult);
+
+    // Free memory allocated for the final result
+    free(finalResult);
+}
+
+int main() {
+    char prefixExpression[MAX_SIZE];
+
+    printf("Enter the prefix expression: ");
+    scanf("%s", prefixExpression);
+
+    prefixToPostfix(prefixExpression);
+
+    return 0;
+}
+
+
+
+
+4.	Write a C program to convert a given Prefix expression into its equivalent Infix expression using stack
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_SIZE 100
+
+// Structure to represent a stack
+struct Stack {
+    int top;
+    unsigned capacity;
+    char **array;
+};
+
+// Function to initialize a stack
+struct Stack *createStack(unsigned capacity) {
+    struct Stack *stack = (struct Stack *)malloc(sizeof(struct Stack));
+    stack->top = -1;
+    stack->capacity = capacity;
+    stack->array = (char **)malloc(stack->capacity * sizeof(char *));
+    return stack;
+}
+
+// Function to push a string onto the stack
+void push(struct Stack *stack, char *item) {
+    if (stack->top == stack->capacity - 1) {
+        printf("Stack Overflow\n");
+        return;
+    }
+    stack->array[++stack->top] = item;
+}
+
+// Function to pop a string from the stack
+char *pop(struct Stack *stack) {
+    if (stack->top == -1) {
+        printf("Stack Underflow\n");
+        return NULL;
+    }
+    return stack->array[stack->top--];
+}
+
+// Function to check if the stack is empty
+int isEmpty(struct Stack *stack) {
+    return stack->top == -1;
+}
+
+// Function to check if a character is an operator
+int isOperator(char ch) {
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+}
+
+// Function to convert prefix expression to infix
+void prefixToInfix(char *prefixExpression) {
+    struct Stack *stack = createStack(strlen(prefixExpression));
+    int i;
+
+    // Traverse the prefix expression in reverse order
+    for (i = strlen(prefixExpression) - 1; i >= 0; i--) {
+        if (isalnum(prefixExpression[i])) {
+            // If operand, push onto the stack
+            char *operand = (char *)malloc(2 * sizeof(char));
+            operand[0] = prefixExpression[i];
+            operand[1] = '\0';
+            push(stack, operand);
+        } else if (isOperator(prefixExpression[i])) {
+            // If operator, pop two operands, perform the operation, and push the result back
+            char *operand1 = pop(stack);
+            char *operand2 = pop(stack);
+
+            char *result = (char *)malloc((strlen(operand1) + strlen(operand2) + 4) * sizeof(char));
+            sprintf(result, "(%s%c%s)", operand1, prefixExpression[i], operand2);
+            push(stack, result);
+
+            // Free memory allocated for operands
+            free(operand1);
+            free(operand2);
+        }
+    }
+
+    // The final result is the infix expression
+    char *finalResult = pop(stack);
+    printf("Infix expression: %s\n", finalResult);
+
+    // Free memory allocated for the final result
+    free(finalResult);
+}
+
+int main() {
+    char prefixExpression[MAX_SIZE];
+
+    printf("Enter the prefix expression: ");
+    scanf("%s", prefixExpression);
+
+    prefixToInfix(prefixExpression);
+
+    return 0;
+}
+
+
+
+
+
+5.	Write a C program to convert a given Postfix expression into its equivalent Prefix expression using stack
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#define MAX_SIZE 100
+
+// Structure to represent a stack
+struct Stack {
+    int top;
+    unsigned capacity;
+    char **array;
+};
+
+// Function to initialize a stack
+struct Stack *createStack(unsigned capacity) {
+    struct Stack *stack = (struct Stack *)malloc(sizeof(struct Stack));
+    stack->top = -1;
+    stack->capacity = capacity;
+    stack->array = (char **)malloc(stack->capacity * sizeof(char *));
+    return stack;
+}
+
+// Function to push a string onto the stack
+void push(struct Stack *stack, char *item) {
+    if (stack->top == stack->capacity - 1) {
+        printf("Stack Overflow\n");
+        return;
+    }
+    stack->array[++stack->top] = item;
+}
+
+// Function to pop a string from the stack
+char *pop(struct Stack *stack) {
+    if (stack->top == -1) {
+        printf("Stack Underflow\n");
+        return NULL;
+    }
+    return stack->array[stack->top--];
+}
+
+// Function to check if the stack is empty
+int isEmpty(struct Stack *stack) {
+    return stack->top == -1;
+}
+
+// Function to check if a character is an operator
+int isOperator(char ch) {
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+}
+
+// Function to convert postfix expression to prefix
+void postfixToPrefix(char *postfixExpression) {
+    struct Stack *stack = createStack(strlen(postfixExpression));
+    int i;
+
+    // Traverse the postfix expression
+    for (i = 0; i < strlen(postfixExpression); i++) {
+        if (isalnum(postfixExpression[i])) {
+            // If operand, push onto the stack
+            char *operand = (char *)malloc(2 * sizeof(char));
+            operand[0] = postfixExpression[i];
+            operand[1] = '\0';
+            push(stack, operand);
+        } else if (isOperator(postfixExpression[i])) {
+            // If operator, pop two operands, concatenate them with the operator, and push the result back
+            char *operand2 = pop(stack);
+            char *operand1 = pop(stack);
+
+            char *result = (char *)malloc((strlen(operand1) + strlen(operand2) + 2) * sizeof(char));
+            sprintf(result, "%c%s%s", postfixExpression[i], operand1, operand2);
+            push(stack, result);
+
+            // Free memory allocated for operands
+            free(operand1);
+            free(operand2);
+        }
+    }
+
+    // The final result is the prefix expression
+    char *finalResult = pop(stack);
+    printf("Prefix expression: %s\n", finalResult);
+
+    // Free memory allocated for the final result
+    free(finalResult);
+}
+
+int main() {
+    char postfixExpression[MAX_SIZE];
+
+    printf("Enter the postfix expression: ");
+    scanf("%s", postfixExpression);
+
+    postfixToPrefix(postfixExpression);
+
+    return 0;
+}
+
+
+
+6.	Write a C program to convert a given Postfix expression into its equivalent Infix expression using stack
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#define MAX_SIZE 100
+
+// Structure to represent a stack
+struct Stack {
+    int top;
+    unsigned capacity;
+    char **array;
+};
+
+// Function to initialize a stack
+struct Stack *createStack(unsigned capacity) {
+    struct Stack *stack = (struct Stack *)malloc(sizeof(struct Stack));
+    stack->top = -1;
+    stack->capacity = capacity;
+    stack->array = (char **)malloc(stack->capacity * sizeof(char *));
+    return stack;
+}
+
+// Function to push a string onto the stack
+void push(struct Stack *stack, char *item) {
+    if (stack->top == stack->capacity - 1) {
+        printf("Stack Overflow\n");
+        return;
+    }
+    stack->array[++stack->top] = item;
+}
+
+// Function to pop a string from the stack
+char *pop(struct Stack *stack) {
+    if (stack->top == -1) {
+        printf("Stack Underflow\n");
+        return NULL;
+    }
+    return stack->array[stack->top--];
+}
+
+// Function to check if the stack is empty
+int isEmpty(struct Stack *stack) {
+    return stack->top == -1;
+}
+
+// Function to check if a character is an operator
+int isOperator(char ch) {
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+}
+
+// Function to convert postfix expression to infix
+void postfixToInfix(char *postfixExpression) {
+    struct Stack *stack = createStack(strlen(postfixExpression));
+    int i;
+
+    // Traverse the postfix expression
+    for (i = 0; i < strlen(postfixExpression); i++) {
+        if (isalnum(postfixExpression[i])) {
+            // If operand, push onto the stack
+            char *operand = (char *)malloc(2 * sizeof(char));
+            operand[0] = postfixExpression[i];
+            operand[1] = '\0';
+            push(stack, operand);
+        } else if (isOperator(postfixExpression[i])) {
+            // If operator, pop two operands, perform the operation, and push the result back
+            char *operand2 = pop(stack);
+            char *operand1 = pop(stack);
+
+            char *result = (char *)malloc((strlen(operand1) + strlen(operand2) + 4) * sizeof(char));
+            sprintf(result, "(%s%c%s)", operand1, postfixExpression[i], operand2);
+            push(stack, result);
+
+            // Free memory allocated for operands
+            free(operand1);
+            free(operand2);
+        }
+    }
+
+    // The final result is the infix expression
+    char *finalResult = pop(stack);
+    printf("Infix expression: %s\n", finalResult);
+
+    // Free memory allocated for the final result
+    free(finalResult);
+}
+
+int main() {
+    char postfixExpression[MAX_SIZE];
+
+    printf("Enter the postfix expression: ");
+    scanf("%s", postfixExpression);
+
+    postfixToInfix(postfixExpression);
+
+    return 0;
+}
+
+
+7.	Write a C program to implement the primitive operations of circular queue
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define n 10
+
+int queue[n];
+int front = -1;
+int rear = -1;
+
+void enqueue(int x) {
+    if (front == -1 && rear == -1) {
+        front = rear = 0;
+        queue[rear] = x;
+    } else {
+        rear = (rear + 1) % n;
+        queue[rear] = x;
+    }
+}
+
+void dequeue() {
+    if (front == rear) {
+        front = rear = -1;
+        printf("Queue Full\n");
+    } else {
+        front = (front + 1) % n;
+    }
+}
+
+void display() {
+    if (front == -1 && rear == -1) {
+        printf("Empty!\n");
+    } else {
+        for (int i = front; i <= rear; i++) {
+            printf("%d ", queue[i]);
+        }
+        printf("\n");
+    }
+}
+
+void size() {
+    int count = 0;
+    if (front == -1 && rear == -1) {
+        printf("Empty!\n");
+    } else {
+        for (int i = front; i <= rear; i++) {
+            count++;
+        }
+        printf("%d\n", count);
+    }
+}
+
+int main() {
+    int opt, num;
+    while (1) {
+        printf("1. En-q\n 2. De-q\n 3. Display\n 4. Size\n 5. Exit\n");
+        printf("Enter an Option: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+            case 1:
+                printf("Enter a Number: ");
+                scanf("%d", &num);
+                enqueue(num);
+                break;
+
+            case 2:
+                dequeue();
+                printf("Deleted!\n");
+                break;
+
+            case 3:
+                display();
+                break;
+
+            case 4:
+                size();
+                break;
+
+            case 5:
+                printf("Exiting!\n");
+                return 0;
+        }
+    }
+
+    return 0;
+}
+
+
+
+
+8.	Write a C program to implement the primitive operations of double ended queue
+
+#include<stdio.h>
+#include<stdlib.h>
+
+#define n 10
+
+int queue[n];
+int front = -1;
+int rear = -1;
+
+void insert_at_rear(int x) {
+    if ((front == 0 && rear == n - 1) || (front == rear + 1)) {
+        printf("Overflow\n");
+    } else if (front == -1 && rear == -1) {
+        front = rear = 0;
+        queue[rear] = x;
+    } else if (rear == n - 1) {
+        rear = 0;
+        queue[rear] = x;
+    } else {
+        rear++;
+        queue[rear] = x;
+    }
+}
+
+void delete_at_rear() {
+    if (front == -1 && rear == -1) {
+        printf("Empty!\n");
+    } else if (front == rear) {
+        front = rear = -1;
+    } else if (rear == 0) {
+        rear = n - 1;
+    } else {
+        rear--;
+    }
+}
+
+void insert_at_front(int x) {
+    if ((front == 0 && rear == n - 1) || (front == rear + 1)) {
+        printf("Overflow!\n");
+    } else if (front == -1 && rear == -1) {
+        front = rear = 0;
+        queue[front] = x;
+    } else if (front == 0) {
+        front = n - 1;
+        queue[front] = x;
+    } else {
+        front--;
+        queue[front] = x;
+    }
+}
+
+void delete_from_front() {
+    if (front == -1 && rear == -1) {
+        printf("Empty!\n");
+    } else if (front == rear) {
+        front = rear = -1;
+    } else if (front == n - 1) {
+        front = 0;
+    } else {
+        front++;
+    }
+}
+
+void display() {
+    if (front == -1 || rear == -1) {
+        printf("Empty!\n");
+    } else {
+        printf("Queue elements: ");
+        for (int i = front; i != (rear + 1) % n; i = (i + 1) % n) {
+            printf("%d ", queue[i]);
+        }
+        printf("\n");
+    }
+}
+
+
+
+int main() {
+    int opt, num;
+
+    while (1) {
+        printf("1. Insert at Front\n 2. Insert at Rear\n 3. Delete at Front\n 4. Delete at Rear\n 5. Display\n 6. Exit\n");
+        printf("Enter Option: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+            case 1:
+                printf("Enter a Number: ");
+                scanf("%d", &num);
+                insert_at_front(num);
+                break;
+
+            case 2:
+                printf("Enter a Number: ");
+                scanf("%d", &num);
+                insert_at_rear(num);
+                break;
+
+            case 3:
+                delete_from_front();
+                break;
+
+            case 4:
+                delete_at_rear();
+                break;
+
+            case 5:
+                display();
+                break;
+
+            case 6:
+                printf("Exiting!\n");
+                exit(0);
+
+            default:
+                printf("Invalid option! Try again.\n");
+        }
+    }
+
+    return 0;
+}
+
+
+
+9.	Write a C program to implement the primitive operations of priority queue
+
+#include <stdio.h>
+
+#define n 100
+
+typedef struct {
+    int data;
+    int priority;
+} Element;
+
+Element priorityQueue[n];
+int front = -1;
+int rear = -1;
+
+void enqueue(int data, int priority) {
+    Element newItem;
+    newItem.data = data;
+    newItem.priority = priority;
+
+    if (rear == n - 1) {
+        printf("Queue Overflow\n");
+        return;
+    }
+
+    if (front == -1) {
+        front = rear = 0;
+        priorityQueue[rear] = newItem;
+    } else {
+        int i;
+        for (i = rear; i >= front && priorityQueue[i].priority < newItem.priority; i--) {
+            priorityQueue[i + 1] = priorityQueue[i];
+        }
+        priorityQueue[i + 1] = newItem;
+        rear++;
+    }
+}
+
+void dequeue() {
+    if (front == -1) {
+        printf("Queue Underflow\n");
+        return;
+    }
+
+    printf("Dequeued item: %d (Priority: %d)\n", priorityQueue[front].data, priorityQueue[front].priority);
+
+    if (front == rear) {
+        front = rear = -1;
+    } else {
+        front++;
+    }
+}
+
+void display() {
+    if (front == -1) {
+        printf("Queue is empty\n");
+        return;
+    }
+
+    printf("Priority Queue elements:\n");
+    for (int i = front; i <= rear; i++) {
+        printf("Data: %d, Priority: %d\n", priorityQueue[i].data, priorityQueue[i].priority);
+    }
+}
+
+int main() {
+    int option, data, priority;
+
+    do {
+        printf("\n1. Enqueue\n2. Dequeue\n3. Display\n4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &option);
+
+        switch (option) {
+            case 1:
+                printf("Enter data: ");
+                scanf("%d", &data);
+                printf("Enter priority: ");
+                scanf("%d", &priority);
+                enqueue(data, priority);
+                break;
+            case 2:
+                dequeue();
+                break;
+            case 3:
+                display();
+                break;
+            case 4:
+                printf("Exiting program.\n");
+                break;
+            default:
+                printf("Invalid option. Please try again.\n");
+        }
+    } while (option != 4);
+
+    return 0;
+}
+
+
+
+10.	Write a C program to check string with parenthesis and validate it using stack
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>  // Add this line for bool type and true/false constants
+
+#define MAX_SIZE 100
+
+bool is_valid_parenthesis(char str[]) {
+    char stack[MAX_SIZE];
+    int top = -1;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] == '(' || str[i] == '[' || str[i] == '{') {
+            top++;
+            stack[top] = str[i];
+        } else if (str[i] == ')' || str[i] == ']' || str[i] == '}') {
+            if (top == -1 || !is_matching(stack[top], str[i])) {
+                return false;
+            }
+            top--;
+        }
+    }
+
+    return top == -1;
+}
+
+bool is_matching(char open, char close) {
+    return (open == '(' && close == ')') ||
+           (open == '[' && close == ']') ||
+           (open == '{' && close == '}');
+}
+
+int main() {
+    char str[MAX_SIZE];
+
+    printf("Enter a string with parentheses: ");
+    scanf("%s", str);
+
+    if (is_valid_parenthesis(str)) {
+        printf("The string has valid parentheses.\n");
+    } else {
+        printf("The string has invalid parentheses.\n");
+    }
+
+    return 0;
+}
+
+
+
+11.	Write a C program to generate the Fibonacci series using stack
+
+#include <stdio.h>
+
+#define MAX_SIZE 10
+
+int stack[MAX_SIZE];
+int top = -1;
+
+void push(int value) {
+    if (top == MAX_SIZE - 1) {
+        printf("Stack Overflow\n");
+        return;
+    }
+    stack[++top] = value;
+}
+
+int pop() {
+    if (top == -1) {
+        printf("Stack Underflow\n");
+        return -1;
+    }
+    return stack[top--];
+}
+
+void generateFibonacci(int n) {
+    int a = 0, b = 1;
+    
+    for (int i = 0; i < n; i++) {
+        push(a);
+        int next = a + b;
+        a = b;
+        b = next;
+    }
+}
+
+void displayStack() {
+    printf("Stack elements:\n");
+    for (int i = top; i >= 0; i--) {
+        printf("%d ", stack[i]);
+    }
+}
+
+int main() {
+    int n;
+
+    printf("Enter the number of Fibonacci numbers to generate: ");
+    scanf("%d", &n);
+
+    generateFibonacci(n);
+
+    printf("Generated Fibonacci series using stack:\n");
+    displayStack();
+
+    return 0;
+}
+
+
+12.	Write a C program to implement the decimal to binary conversion using stack
+
+#include <stdio.h>
+#define n 10
+
+int stack[n];
+int top = -1;
+
+void push(int x) {
+    if (top == n - 1) {
+        printf("Stack Overflow!\n");
+    } else {
+        top++;
+        stack[top] = x;
+    }
+}
+
+void pop() {
+    if (top == -1) {
+        printf("Stack Underflow!\n");
+    } else {
+        printf("%d", stack[top]);
+        top--;
+    }
+}
+
+int main() {
+    int num;
+    
+    printf("Enter a Number: ");
+    scanf("%d", &num);
+
+    while (num > 0) {
+        push(num % 2);
+        num = num / 2;
+    }
+
+    printf("Binary representation: ");
+    while (top != -1) {
+        pop();
+    }
+
+    return 0;
+}
+
+
+
+13.	Write a C program to implement Josephus problem using stack
+#include <stdio.h>
+
+int josephus(int n, int k) {
+    if (n == 1) {
+        return 1;
+    } else {
+        return (josephus(n - 1, k) + k - 1) % n + 1;
+    }
+}
+
+int main() {
+    int n, k;
+    
+    printf("Enter the number of people (n): ");
+    scanf("%d", &n);
+
+    printf("Enter the counting interval (k): ");
+    scanf("%d", &k);
+
+    int survivor = josephus(n, k);
+    
+    printf("The survivor is at position %d\n", survivor);
+
+    return 0;
+}
+14.	
+
+
+15.	Write a C program to implement Josephus problem using linked list
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Node structure for the linked list
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+// Function to create a new node
+struct Node* createNode(int data) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Function to build a circular linked list with 'n' nodes
+struct Node* buildCircularList(int n) {
+    struct Node* head = createNode(1);
+    struct Node* current = head;
+
+    for (int i = 2; i <= n; i++) {
+        current->next = createNode(i);
+        current = current->next;
+    }
+
+    current->next = head; // Make the list circular
+    return head;
+}
+
+// Function to simulate the Josephus problem and find the survivor
+int josephus(struct Node* head, int k) {
+    struct Node *prev, *current;
+    current = prev = head;
+
+    // Move to the last node in the list
+    while (current->next != head) {
+        current = current->next;
+    }
+
+    // Perform Josephus elimination until only one node remains
+    while (current->next != current) {
+        // Move 'k-1' nodes ahead
+        for (int i = 1; i < k; i++) {
+            prev = current;
+            current = current->next;
+        }
+
+        // Remove the 'k-th' node
+        prev->next = current->next;
+        free(current);
+        current = prev->next;
+    }
+
+    // The last remaining node is the survivor
+    int survivor = current->data;
+    free(current);
+
+    return survivor;
+}
+
+int main() {
+    int n, k;
+
+    printf("Enter the number of people (n): ");
+    scanf("%d", &n);
+
+    printf("Enter the counting interval (k): ");
+    scanf("%d", &k);
+
+    // Build a circular linked list with 'n' nodes
+    struct Node* head = buildCircularList(n);
+
+    // Find the survivor using Josephus algorithm
+    int survivor = josephus(head, k);
+
+    printf("The survivor is at position %d\n", survivor);
+
+    return 0;
+}
+
+
+
+16.	Write a C program to perform following operations on singly linked list.
+a.	Insertion at beginning
+b.	Deletion at middle
+c.	Display 
+#include <stdio.h>
+#include <stdlib.h>
+
+struct node {
+    int data;
+    struct node* next;
+};
+
+struct node *head = NULL, *newnode;
+
+void insert_at_beg() {
+    newnode = malloc(sizeof(struct node));
+    printf("Enter data: ");
+    scanf("%d", &newnode->data);
+    newnode->next = NULL;
+
+    if (head == NULL) {
+        head = newnode;
+    } else {
+        newnode->next = head;
+        head = newnode;
+    }
+}
+
+void delete_mid() {
+    int pos, count = 0, i = 1;
+    struct node *temp, *prev;
+    
+    if (head == NULL) {
+        printf("List is Empty!\n");
+        return;
+    }
+
+    temp = head;
+    while (temp != NULL) {
+        count++;
+        temp = temp->next;
+    }
+
+    pos = count / 2;
+    temp = head;
+    prev = NULL;
+
+    while (i < pos) {
+        prev = temp;
+        temp = temp->next;
+        i++;
+    }
+
+    if (prev == NULL) {
+        head = temp->next;
+    } else {
+        prev->next = temp->next;
+    }
+
+    free(temp);
+}
+
+void display() {
+    struct node* temp;
+    if (head == NULL) {
+        printf("List is empty.\n");
+    } else {
+        temp = head;
+        printf("List elements: ");
+        while (temp != NULL) {
+            printf("%d ", temp->data);
+            temp = temp->next;
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    int opt;
+    while (1) {
+        printf("\n1. Insert at Beginning\n2. Delete at Mid\n3. Display\n4. Exit\nOption: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+            case 1:
+                insert_at_beg();
+                break;
+
+            case 2:
+                delete_mid();
+                break;
+
+            case 3:
+                display();
+                break;
+
+            case 4:
+                printf("Exiting!\n");
+                exit(0);
+
+            default:
+                printf("Invalid option. Please try again.\n");
+        }
+    }
+    return 0;
+}
+
+
+
+
+
+17.	Write a C program to perform the following operations on a singly linked list.
+a.	Insertion at middle
+b.	Deletion at end
+c.	Display
+#include<stdio.h>
+#include<stdlib.h>
+
+struct node {
+    int data;
+    struct node* next;
+};
+
+struct node* head = NULL, * newnode;
+
+void insert_at_mid() {
+    int pos, i = 1, count = 0;
+    struct node* temp;
+
+    newnode = malloc(sizeof(struct node));
+    printf("Enter Data: ");
+    scanf("%d", &newnode->data);
+    newnode->next = NULL;
+
+    temp = head;
+    while (temp != NULL) {
+        count++;
+        temp = temp->next;
+    }
+    pos = count / 2;
+
+    if (pos == 0) {
+        // Inserting at the beginning
+        newnode->next = head;
+        head = newnode;
+    } else {
+        temp = head;
+        while (i < pos) {
+            temp = temp->next;
+            i++;
+        }
+        newnode->next = temp->next;
+        temp->next = newnode;
+    }
+}
+
+void display() {
+    struct node* temp;
+    temp = head;
+    printf("List elements: ");
+    while (temp != NULL) {
+        printf("%d ", temp->data);
+        temp = temp->next;
+    }
+    printf("\n");
+}
+
+void delete_at_end() {
+    struct node* temp, * prev = NULL;
+    if (head == NULL) {
+        printf("List is Empty!\n");
+    } else {
+        temp = head;
+        while (temp->next != NULL) {
+            prev = temp;
+            temp = temp->next;
+        }
+
+        if (prev == NULL) {
+            // Deleting the only node in the list
+            free(temp);
+            head = NULL;
+        } else {
+            prev->next = NULL;
+            free(temp);
+        }
+    }
+}
+
+int main() {
+    int opt;
+    while (1) {
+        printf("\n1. Insert at Mid\n 2. Delete at End\n 3. Display\n 4. Exit\n Enter Option: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+        case 1:
+            insert_at_mid();
+            break;
+
+        case 2:
+            delete_at_end();
+            break;
+
+        case 3:
+            display();
+            break;
+
+        case 4:
+            printf("Exiting!\n");
+            exit(0);
+            break;
+
+        default:
+            printf("Invalid option. Please try again.\n");
+        }
+    }
+    return 0;
+}
+
+
+
+
+18.	Write a C program to perform the following operations on a singly linked list.
+a.	Insertion at end
+b.	Deletion at beginning
+c.	Display
+
+#include<stdio.h>
+#include<stdlib.h>
+
+struct node {
+    int data;
+    struct node* next;
+};
+
+struct node* head = NULL;
+
+void insert_at_end() {
+    struct node* temp;
+    struct node* newnode = (struct node*)malloc(sizeof(struct node));
+    printf("Enter Data: ");
+    scanf("%d", &newnode->data);
+    newnode->next = NULL;
+
+    if (head == NULL) {
+        head = newnode;
+    } else {
+        temp = head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = newnode;
+    }
+}
+
+void delete_at_beg() {
+    struct node* temp;
+
+    if (head == NULL) {
+        printf("List is empty!\n");
+    } else {
+        temp = head;
+        head = temp->next;
+        free(temp);
+        printf("Node deleted from the beginning.\n");
+    }
+}
+
+void display() {
+    struct node* temp;
+
+    if (head == NULL) {
+        printf("List is empty.\n");
+    } else {
+        temp = head;
+        printf("List elements: ");
+        while (temp != NULL) {
+            printf("%d ", temp->data);
+            temp = temp->next;
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    int opt;
+
+    while (1) {
+        printf("\n1. Insert at End\n2. Delete at Beginning\n3. Display\n4. Exit\nOption: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+            case 1:
+                insert_at_end();
+                break;
+
+            case 2:
+                delete_at_beg();
+                break;
+
+            case 3:
+                display();
+                break;
+
+            case 4:
+                printf("Exiting!\n");
+                exit(0);
+
+            default:
+                printf("Invalid Choice, Try Again!\n");
+        }
+    }
+
+    return 0;
+}
+
+
+19.	Write a C program to perform the following operations on single variable polynomials using singly linked list.
+a.	Accept a sorted polynomial
+b.	Addition of two polynomials
+c.	Display
+#include <stdio.h>
+#include <stdlib.h>
+
+struct node {
+    float co;
+    int expo;
+    struct node* link;
+};
+
+struct node* insert(struct node* head, float co, int expo) {
+    struct node* temp = malloc(sizeof(struct node));
+    temp->co = co;
+    temp->expo = expo;
+    temp->link = NULL;
+    if (head == NULL || head->expo < expo) {
+        temp->link = head;
+        head = temp;
+    } else {
+        struct node* temp1 = head;
+        while (temp1->link != NULL && temp1->link->expo >= expo) {
+            temp1 = temp1->link;
+        }
+        temp->link = temp1->link;
+        temp1->link = temp;
+    }
+    return head;
+}
+
+struct node* add(struct node* head, struct node* head1) {
+    struct node* temp = head;
+    struct node* temp1 = head1;
+    struct node* head2 = NULL;
+
+    while (temp != NULL && temp1 != NULL) {
+        if (temp->expo == temp1->expo) {
+            head2 = insert(head2, temp->co + temp1->co, temp->expo);
+            temp = temp->link;
+            temp1 = temp1->link;
+        } else if (temp->expo > temp1->expo) {
+            head2 = insert(head2, temp->co, temp->expo);
+            temp = temp->link;
+        } else if (temp1->expo > temp->expo) {
+            head2 = insert(head2, temp1->co, temp1->expo);
+            temp1 = temp1->link;
+        }
+    }
+    while (temp != NULL) {
+        head2 = insert(head2, temp->co, temp->expo);
+        temp = temp->link;
+    }
+    while (temp1 != NULL) {
+        head2 = insert(head2, temp1->co, temp1->expo);
+        temp1 = temp1->link;
+    }
+    return head2;
+}
+
+struct node* create(struct node* head) {
+    int n, expo;
+    float co;
+
+    printf("Enter the number of terms: ");
+    scanf("%d", &n);
+
+    for (int i = 0; i < n; i++) {
+        printf("Enter the coefficient of term %d: ", i + 1);
+        scanf("%f", &co);
+        printf("Enter the exponent of term %d: ", i + 1);
+        scanf("%d", &expo);
+        head = insert(head, co, expo);
+    }
+    printf("\n");
+    return head;
+}
+
+void display(struct node* head) {
+    struct node* ptr = head;
+    while (ptr != NULL) {
+        printf("(%.1fx^%d)", ptr->co, ptr->expo);
+        ptr = ptr->link;
+        if (ptr != NULL) {
+            printf(" + ");
+        } else
+            printf("\n");
+    }
+}
+
+int main() {
+    struct node* head = NULL;
+    struct node* head1 = NULL;
+    struct node* head2 = NULL;
+    int choice;
+
+    do {
+        printf("\n1. Accept Polynomial\n");
+        printf("2. Add Polynomial\n");
+        printf("3. Display\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter Polynomial 1:\n");
+                head = create(head);
+                printf("Enter Polynomial 2:\n");
+                head1 = create(head1);
+                break;
+            case 2:
+                head2 = add(head, head1);
+                printf("Polynomials Added:\n");
+                display(head2);
+                break;
+            case 3:
+                printf("Polynomial 1:\n");
+                display(head);
+                printf("Polynomial 2:\n");
+                display(head1);
+                break;
+            case 4:
+                printf("Exiting!\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
+
+
+
+20.	Write a C program to accept two sorted single linked lists and merge them in a single linked list in such a way that the resultant linked list will be a sorted one
+
+#include<stdio.h>
+#include<stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+struct Node* insertAtEnd(struct Node* head, int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->next = NULL;
+
+    if (head == NULL) {
+        head = newNode;
+    } else {
+        struct Node* temp = head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = newNode;
+    }
+
+    return head;
+}
+
+struct Node* mergeSortedLists(struct Node* list1, struct Node* list2) {
+    struct Node* mergedList = NULL;
+
+    while (list1 != NULL && list2 != NULL) {
+        if (list1->data < list2->data) {
+            mergedList = insertAtEnd(mergedList, list1->data);
+            list1 = list1->next;
+        } else {
+            mergedList = insertAtEnd(mergedList, list2->data);
+            list2 = list2->next;
+        }
+    }
+    while (list1 != NULL) {
+        mergedList = insertAtEnd(mergedList, list1->data);
+        list1 = list1->next;
+    }
+    while (list2 != NULL) {
+        mergedList = insertAtEnd(mergedList, list2->data);
+        list2 = list2->next;
+    }
+
+    return mergedList;
+}
+void displayList(struct Node* head) {
+    struct Node* temp = head;
+    while (temp != NULL) {
+        printf("%d ", temp->data);
+        temp = temp->next;
+    }
+    printf("\n");
+}
+
+int main() {
+    struct Node* list1 = NULL;
+    struct Node* list2 = NULL;
+    int n, value;
+    printf("Enter the number of elements for the first sorted list: ");
+    scanf("%d", &n);
+    printf("Enter the elements in ascending order:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &value);
+        list1 = insertAtEnd(list1, value);
+    }
+    printf("Enter the number of elements for the second sorted list: ");
+    scanf("%d", &n);
+    printf("Enter the elements in ascending order:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &value);
+        list2 = insertAtEnd(list2, value);
+    }
+    struct Node* mergedList = mergeSortedLists(list1, list2);
+    printf("Merged Sorted List: ");
+    displayList(mergedList);
+
+    
+
+    return 0;
+}
+
+
+
+21.	Write a C program to create a binary search tree and perform in-order traversal using a non-recursive function
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+
+    return root;
+}
+
+void inOrderTraversal(struct Node* root) {
+    struct Node* stack[100];
+    int top = -1;
+
+    struct Node* current = root;
+
+    while (current != NULL || top != -1) {
+        while (current != NULL) {
+            stack[++top] = current;
+            current = current->left;
+        }
+
+        current = stack[top--];
+        printf("%d ", current->data);
+
+        current = current->right;
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    int n, value;
+
+    printf("Enter the number of elements in the BST: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements:\n");
+    for (int i = 0; i < n; ++i) {
+        scanf("%d", &value);
+        root = insert(root, value);
+    }
+
+    printf("In-order Traversal: ");
+    inOrderTraversal(root);
+    printf("\n");
+
+    return 0;
+}
+
+
+
+
+
+22.	Write a C program to create a binary search tree and perform pre-order traversal using a non-recursive function
+
+#include <stdio.h>
+#include <stdlib.h>
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+    return root;
+}
+void preOrderTraversal(struct Node* root) {
+    struct Node* stack[100];
+    int top = -1;
+
+    if (root != NULL) {
+        stack[++top] = root;
+
+        while (top >= 0) {
+            struct Node* current = stack[top--];
+            printf("%d ", current->data);
+
+            if (current->right != NULL) {
+                stack[++top] = current->right;
+            }
+
+            if (current->left != NULL) {
+                stack[++top] = current->left;
+            }
+        }
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    int n, value;
+
+    printf("Enter the number of elements in the BST: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements:\n");
+    for (int i = 0; i < n; ++i) {
+        scanf("%d", &value);
+        root = insert(root, value);
+    }
+
+    printf("Pre-order Traversal: ");
+    preOrderTraversal(root);
+    printf("\n");
+
+    return 0;
+}
+
+
+
+23.	Write a C program to create a binary search tree and perform post-order traversal using a non-recursive function
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+
+    return root;
+}
+
+void postOrderTraversal(struct Node* root) {
+    struct Node* stack[100];
+    int top = -1;
+    struct Node* prev = NULL;
+
+    while (root != NULL || top != -1) {
+        for (; root != NULL; root = root->left) {
+            stack[++top] = root;
+        }
+
+        root = stack[top];
+
+        if (root->right == NULL || root->right == prev) {
+            printf("%d ", root->data);
+            top--;
+            prev = root;
+            root = NULL;
+        } else {
+            root = root->right;
+        }
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    int n, value;
+
+    printf("Enter the number of elements in the BST: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements:\n");
+    for (int i = 0; i < n; ++i) {
+        scanf("%d", &value);
+        root = insert(root, value);
+    }
+
+    printf("Post-order Traversal: ");
+    postOrderTraversal(root);
+    printf("\n");
+    return 0;
+}
+
+
+
+24.	Write a C program to create a binary search tree and find the height of the tree using non-recursive function.
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+
+    return root;
+}
+
+int findHeight(struct Node* root) {
+    if (root == NULL) {
+        return 0;
+    }
+
+    int leftHeight = findHeight(root->left);
+    int rightHeight = findHeight(root->right);
+    return (leftHeight > rightHeight) ? (leftHeight + 1) : (rightHeight + 1);
+}
+
+int main() {
+    struct Node* root = NULL;
+    int n, value;
+
+    printf("Enter the number of nodes in the binary search tree: ");
+    scanf("%d", &n);
+
+    printf("Enter the values of the nodes:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &value);
+        root = insert(root, value);
+    }
+
+    int height = findHeight(root);
+
+    printf("Height of the binary search tree: %d\n", height);
+
+    return 0;
+}
+
+
+
+25.	Write a C program to accept a binary search tree and display mirror image of a tree by creating new tree
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+
+    return root;
+}
+
+void mirrorImage(struct Node* root, struct Node** mirrorRoot) {
+    if (root == NULL) {
+        *mirrorRoot = NULL;
+        return;
+    }
+
+    *mirrorRoot = createNode(root->data);
+    mirrorImage(root->left, &((*mirrorRoot)->right));
+    mirrorImage(root->right, &((*mirrorRoot)->left));
+}
+
+void inOrderTraversal(struct Node* root) {
+    if (root != NULL) {
+        inOrderTraversal(root->left);
+        printf("%d ", root->data);
+        inOrderTraversal(root->right);
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    struct Node* mirrorRoot = NULL;
+    int n, value;
+
+    printf("Enter the number of nodes in the Binary Search Tree: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements of the Binary Search Tree:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &value);
+        root = insert(root, value);
+    }
+
+    printf("Original Tree (In-order Traversal): ");
+    inOrderTraversal(root);
+    printf("\n");
+
+    mirrorImage(root, &mirrorRoot);
+
+    printf("Mirror Image Tree (In-order Traversal): ");
+    inOrderTraversal(mirrorRoot);
+    printf("\n");
+
+    return 0;
+}
+
+
+
+26.	 Write a C program to display the leaf nodes level-wise
+
+#include<stdio.h>
+#include<stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+
+    return root;
+}
+
+void displayLeafNodesLevelWise(struct Node* root, int level) {
+    if (root == NULL) {
+        return;
+    }
+
+    if (root->left == NULL && root->right == NULL) {
+        printf("%d ", root->data);
+    }
+
+    if (level == 1) {
+        return;
+    }
+
+    displayLeafNodesLevelWise(root->left, level - 1);
+    displayLeafNodesLevelWise(root->right, level - 1);
+}
+
+int getHeight(struct Node* root) {
+    if (root == NULL) {
+        return 0;
+    }
+
+    int leftHeight = getHeight(root->left);
+    int rightHeight = getHeight(root->right);
+
+    return (leftHeight > rightHeight) ? leftHeight + 1 : rightHeight + 1;
+}
+
+void displayLeafNodesLevelWiseRecursive(struct Node* root) {
+    int height = getHeight(root);
+
+    printf("Leaf Nodes Level-wise:\n");
+    for (int i = 1; i <= height; i++) {
+        displayLeafNodesLevelWise(root, i);
+        printf("\n");
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    int n, value;
+
+    printf("Enter the number of nodes in the Binary Tree: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements of the Binary Tree:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &value);
+        root = insert(root, value);
+    }
+
+    displayLeafNodesLevelWiseRecursive(root);
+    printf("\n");
+
+    return 0;
+}
+
+
+
+
+27.	Write a C program to perform all primitive operations of deletion of a node in a binary tree.
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure for a node in the binary tree
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Function to create a new node
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Function to perform in-order traversal of the binary tree
+void inorderTraversal(struct Node* root) {
+    if (root != NULL) {
+        inorderTraversal(root->left);
+        printf("%d ", root->data);
+        inorderTraversal(root->right);
+    }
+}
+
+// Function to find the deepest node in the binary tree
+struct Node* findDeepestNode(struct Node* root) {
+    struct Node* temp = root;
+    while (temp->left != NULL) {
+        temp = temp->left;
+    }
+    return temp;
+}
+
+// Function to delete a node in the binary tree
+struct Node* deleteNode(struct Node* root, int key) {
+    if (root == NULL) {
+        return root;
+    }
+
+    if (key < root->data) {
+        root->left = deleteNode(root->left, key);
+    } else if (key > root->data) {
+        root->right = deleteNode(root->right, key);
+    } else {
+        // Node with only one child or no child
+        if (root->left == NULL) {
+            struct Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            struct Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        // Node with two children
+        struct Node* temp = findDeepestNode(root->right);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+    return root;
+}
+
+int main() {
+    struct Node* root = createNode(50);
+    root->left = createNode(30);
+    root->right = createNode(70);
+    root->left->left = createNode(20);
+    root->left->right = createNode(40);
+    root->right->left = createNode(60);
+    root->right->right = createNode(80);
+
+    printf("Original Binary Tree (In-order traversal): ");
+    inorderTraversal(root);
+    printf("\n");
+
+    int key;
+    printf("Enter the value of the node to be deleted: ");
+    scanf("%d", &key);
+
+    root = deleteNode(root, key);
+
+    printf("Binary Tree after deleting node %d (In-order traversal): ", key);
+    inorderTraversal(root);
+    printf("\n");
+
+    return 0;
+}
+
+
+
+
+
+
+28.	Write a C program to implement a Threaded Binary tree and traverse it in-order
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+    int rightThread; // Flag to indicate if the right pointer is a thread
+};
+
+// Utility function to find leftmost node in a tree rooted with n
+struct Node* leftMost(struct Node* n) {
+    if (n == NULL)
+        return NULL;
+
+    while (n->left != NULL)
+        n = n->left;
+
+    return n;
+}
+
+// Function to insert a new node in a threaded binary tree
+struct Node* insert(struct Node* root, int data) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = data;
+    newNode->left = newNode->right = NULL;
+    newNode->rightThread = 1; // Initialize as a thread
+
+    if (root == NULL) {
+        root = newNode;
+    } else {
+        struct Node* cur = root;
+        struct Node* parent = NULL;
+
+        // Find the position to insert the new node
+        while (cur != NULL) {
+            parent = cur;
+            if (data < cur->data) {
+                if (cur->rightThread == 0)
+                    cur = cur->left;
+                else
+                    break;
+            } else {
+                cur = cur->rightThread ? NULL : cur->right;
+            }
+        }
+
+        if (data < parent->data) {
+            newNode->left = parent->left;
+            parent->left = newNode;
+            newNode->right = parent;
+            parent->rightThread = 0; // Update thread to point to newNode
+        } else {
+            newNode->right = parent->right;
+            parent->right = newNode;
+            parent->rightThread = 1; // Parent is threaded to newNode
+        }
+    }
+
+    return root;
+}
+
+// C code to do inorder traversal in a threaded binary tree
+void inOrder(struct Node* root) {
+    struct Node* cur = leftMost(root);
+    while (cur != NULL) {
+        printf("%d ", cur->data);
+
+        // If this node is a thread node, then go to
+        // inorder successor
+        if (cur->rightThread)
+            cur = cur->right;
+        else // Else go to the leftmost child in the right subtree
+            cur = leftMost(cur->right);
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+
+    int n, data;
+    printf("Enter the number of nodes in the threaded binary tree: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements of the threaded binary tree:\n");
+    for (int i = 0; i < n; ++i) {
+        printf("Enter element %d: ", i + 1);
+        scanf("%d", &data);
+        root = insert(root, data);
+    }
+
+    printf("\nIn-order Traversal of the Threaded Binary Tree:\n");
+    inOrder(root);
+
+    return 0;
+}
+
+
+
+29.	Write a C Program to implement Heap sort using Max heap in descending order 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+void printTree(int arr[], int n, int index, int level) {
+    if (index < n) {
+        printTree(arr, n, 2 * index + 2, level + 1);
+
+        for (int i = 0; i < level; i++)
+            printf("   ");
+
+        printf("%d\n", arr[index]);
+
+        printTree(arr, n, 2 * index + 1, level + 1);
+    }
+}
+
+void heapify(int arr[], int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && arr[left] > arr[largest])
+        largest = left;
+
+    if (right < n && arr[right] > arr[largest])
+        largest = right;
+
+    if (largest != i) {
+        int temp = arr[i];
+        arr[i] = arr[largest];
+        arr[largest] = temp;
+
+        heapify(arr, n, largest);
+    }
+}
+
+void buildMaxHeap(int arr[], int n) {
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+}
+
+void heapSort(int arr[], int n) {
+    buildMaxHeap(arr, n);
+
+    for (int i = n - 1; i > 0; i--) {
+        int temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+
+        heapify(arr, i, 0);
+    }
+}
+
+int main() {
+    int n;
+
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+
+    int arr[n];
+
+    printf("Enter the elements:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    heapSort(arr, n);
+
+    printf("Sorted array in descending order using Heap Sort: \n");
+    for (int i = n - 1; i >= 0; i--) {
+        printf("%d ", arr[i]);
+    }
+
+    printf("\n\nHeap Structure:\n");
+    printTree(arr, n, 0, 0);
+
+    return 0;
+}
+
+
+
+30.	Write a C Program to implement Heap sort using Min heap in ascending order 
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void heapify(int arr[], int n, int i) {
+    int smallest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && arr[left] < arr[smallest])
+        smallest = left;
+
+    if (right < n && arr[right] < arr[smallest])
+        smallest = right;
+
+    if (smallest != i) {
+        int temp = arr[i];
+        arr[i] = arr[smallest];
+        arr[smallest] = temp;
+
+        heapify(arr, n, smallest);
+    }
+}
+
+void buildMinHeap(int arr[], int n) {
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+}
+
+void heapSort(int arr[], int n) {
+    buildMinHeap(arr, n);
+
+    for (int i = n - 1; i > 0; i--) {
+        int temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+
+        heapify(arr, i, 0);
+    }
+}
+
+int main() {
+    int n;
+
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+
+    int arr[n];
+
+    printf("Enter the elements:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    heapSort(arr, n);
+
+    printf("Sorted array in ascending order using Heap Sort: \n");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    return 0;
+}
+
+
+
+31.	Write a C Program to implement Kruskal’s algorithm for min. spanning tree, in which a graph is represented using an adjacency matrix. 
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Edge {
+    int src, dest, weight;
+};
+
+struct Subset {
+    int parent;
+    int rank;
+};
+
+int find(struct Subset subsets[], int i);
+void Union(struct Subset subsets[], int x, int y);
+int compareEdges(const void* a, const void* b);
+void KruskalMST(int V, int E, struct Edge edges[]);
+
+int main() {
+    int V, E;
+
+    printf("Enter the number of vertices and edges: ");
+    scanf("%d %d", &V, &E);
+
+    struct Edge edges[E];
+
+    printf("Enter the edges (source, destination, weight):\n");
+    for (int i = 0; i < E; i++) {
+        scanf("%d %d %d", &edges[i].src, &edges[i].dest, &edges[i].weight);
+    }
+
+    KruskalMST(V, E, edges);
+
+    return 0;
+}
+
+int find(struct Subset subsets[], int i) {
+    if (subsets[i].parent != i)
+        subsets[i].parent = find(subsets, subsets[i].parent);
+    return subsets[i].parent;
+}
+
+void Union(struct Subset subsets[], int x, int y) {
+    int rootX = find(subsets, x);
+    int rootY = find(subsets, y);
+
+    if (subsets[rootX].rank < subsets[rootY].rank)
+        subsets[rootX].parent = rootY;
+    else if (subsets[rootX].rank > subsets[rootY].rank)
+        subsets[rootY].parent = rootX;
+    else {
+        subsets[rootX].parent = rootY;
+        subsets[rootY].rank++;
+    }
+}
+
+int compareEdges(const void* a, const void* b) {
+    return ((struct Edge*)a)->weight - ((struct Edge*)b)->weight;
+}
+
+void KruskalMST(int V, int E, struct Edge edges[]) {
+    struct Subset* subsets = (struct Subset*)malloc(V * sizeof(struct Subset));
+
+    for (int i = 0; i < V; i++) {
+        subsets[i].parent = i;
+        subsets[i].rank = 0;
+    }
+
+    qsort(edges, E, sizeof(struct Edge), compareEdges);
+
+    printf("Minimum Spanning Tree using Kruskal's algorithm:\n");
+    int i = 0, j = 0;
+    while (i < V - 1 && j < E) {
+        struct Edge nextEdge = edges[j++];
+
+        int x = find(subsets, nextEdge.src);
+        int y = find(subsets, nextEdge.dest);
+
+        if (x != y) {
+            printf("(%d, %d) - %d\n", nextEdge.src, nextEdge.dest, nextEdge.weight);
+            Union(subsets, x, y);
+            i++;
+        }
+    }
+
+    free(subsets);
+}
+
+
+
+32.	Write a C Program to implement Prim’s algorithm for min. spanning tree, in which a graph is represented using an adjacency list.
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+struct Node {
+    int vertex;
+    int weight;
+    struct Node* next;
+};
+
+struct AdjList {
+    struct Node* head;
+};
+
+struct Graph {
+    int V;
+    struct AdjList* array;
+};
+
+struct MinHeapNode {
+    int v;
+    int key;
+};
+
+struct MinHeap {
+    int size;
+    int capacity;
+    int* pos;
+    struct MinHeapNode** array;
+};
+
+struct Graph* createGraph(int V);
+struct Node* createNode(int vertex, int weight);
+struct MinHeapNode* createMinHeapNode(int v, int key);
+struct MinHeap* createMinHeap(int capacity);
+void addEdge(struct Graph* graph, int src, int dest, int weight);
+void PrimMST(struct Graph* graph);
+
+int main() {
+    int V, E;
+
+    printf("Enter the number of vertices and edges: ");
+    scanf("%d %d", &V, &E);
+
+    struct Graph* graph = createGraph(V);
+
+    printf("Enter the edges and weights (source, destination, weight):\n");
+    for (int i = 0; i < E; i++) {
+        int src, dest, weight;
+        scanf("%d %d %d", &src, &dest, &weight);
+        addEdge(graph, src, dest, weight);
+        addEdge(graph, dest, src, weight);
+    }
+
+    PrimMST(graph);
+
+    return 0;
+}
+
+// Function to create a new graph with V vertices
+struct Graph* createGraph(int V) {
+    struct Graph* graph = (struct Graph*)malloc(sizeof(struct Graph));
+    graph->V = V;
+    graph->array = (struct AdjList*)malloc(V * sizeof(struct AdjList));
+
+    for (int i = 0; i < V; ++i)
+        graph->array[i].head = NULL;
+
+    return graph;
+}
+
+struct Node* createNode(int vertex, int weight) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->vertex = vertex;
+    newNode->weight = weight;
+    newNode->next = NULL;
+    return newNode;
+}
+
+struct MinHeapNode* createMinHeapNode(int v, int key) {
+    struct MinHeapNode* minHeapNode = (struct MinHeapNode*)malloc(sizeof(struct MinHeapNode));
+    minHeapNode->v = v;
+    minHeapNode->key = key;
+    return minHeapNode;
+}
+
+struct MinHeap* createMinHeap(int capacity) {
+    struct MinHeap* minHeap = (struct MinHeap*)malloc(sizeof(struct MinHeap));
+    minHeap->pos = (int*)malloc(capacity * sizeof(int));
+    minHeap->size = 0;
+    minHeap->capacity = capacity;
+    minHeap->array = (struct MinHeapNode**)malloc(capacity * sizeof(struct MinHeapNode*));
+    return minHeap;
+}
+
+void addEdge(struct Graph* graph, int src, int dest, int weight) {
+    struct Node* newNode = createNode(dest, weight);
+    newNode->next = graph->array[src].head;
+    graph->array[src].head = newNode;
+}
+
+void heapify(struct MinHeap* minHeap, int idx) {
+    int smallest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < minHeap->size && minHeap->array[left]->key < minHeap->array[smallest]->key)
+        smallest = left;
+
+    if (right < minHeap->size && minHeap->array[right]->key < minHeap->array[smallest]->key)
+        smallest = right;
+
+    if (smallest != idx) {
+        struct MinHeapNode* smallestNode = minHeap->array[smallest];
+        struct MinHeapNode* idxNode = minHeap->array[idx];
+
+        minHeap->pos[smallestNode->v] = idx;
+        minHeap->pos[idxNode->v] = smallest;
+
+        struct MinHeapNode* temp = minHeap->array[smallest];
+        minHeap->array[smallest] = minHeap->array[idx];
+        minHeap->array[idx] = temp;
+
+        heapify(minHeap, smallest);
+    }
+}
+
+int isEmpty(struct MinHeap* minHeap) {
+    return minHeap->size == 0;
+}
+
+struct MinHeapNode* extractMin(struct MinHeap* minHeap) {
+    if (isEmpty(minHeap))
+        return NULL;
+
+    struct MinHeapNode* root = minHeap->array[0];
+    struct MinHeapNode* lastNode = minHeap->array[minHeap->size - 1];
+
+    minHeap->array[0] = lastNode;
+
+    minHeap->pos[root->v] = minHeap->size - 1;
+    minHeap->pos[lastNode->v] = 0;
+
+    --minHeap->size;
+    heapify(minHeap, 0);
+
+    return root;
+}
+
+void decreaseKey(struct MinHeap* minHeap, int v, int key) {
+    int i = minHeap->pos[v];
+    minHeap->array[i]->key = key;
+
+    while (i && minHeap->array[i]->key < minHeap->array[(i - 1) / 2]->key) {
+        minHeap->pos[minHeap->array[i]->v] = (i - 1) / 2;
+        minHeap->pos[minHeap->array[(i - 1) / 2]->v] = i;
+
+        struct MinHeapNode* temp = minHeap->array[i];
+        minHeap->array[i] = minHeap->array[(i - 1) / 2];
+        minHeap->array[(i - 1) / 2] = temp;
+
+        i = (i - 1) / 2;
+    }
+}
+
+// Function to check if a given vertex is in the Min Heap
+int isInMinHeap(struct MinHeap* minHeap, int v) {
+    if (minHeap->pos[v] < minHeap->size)
+        return 1;
+    return 0;
+}
+
+void printMST(int parent[], int graphSize, int key[]) {
+    printf("Edges of Minimum Spanning Tree:\n");
+    for (int i = 1; i < graphSize; i++)
+        printf("%d - %d\n", parent[i], i);
+}
+
+void PrimMST(struct Graph* graph) {
+    int V = graph->V;
+    int parent[V]; 
+    int key[V];    
+    struct MinHeap* minHeap = createMinHeap(V);
+
+    
+    for (int v = 1; v < V; v++) {
+        parent[v] = -1;
+        key[v] = INT_MAX;
+        minHeap->array[v] = createMinHeapNode(v, key[v]);
+        minHeap->pos[v] = v;
+    }
+
+    key[0] = 0;
+    minHeap->array[0] = createMinHeapNode(0, key[0]);
+    minHeap->pos[0] = 0;
+
+    minHeap->size = V;
+
+  
+    while (!isEmpty(minHeap)) {
+        struct MinHeapNode* minHeapNode = extractMin(minHeap);
+        int u = minHeapNode->v;
+
+        struct Node* temp = graph->array[u].head;
+        while (temp != NULL) {
+            int v = temp->vertex;
+
+            if (isInMinHeap(minHeap, v) && temp->weight < key[v]) {
+                key[v] = temp->weight;
+                parent[v] = u;
+                decreaseKey(minHeap, v, key[v]);
+            }
+
+            temp = temp->next;
+        }
+    }
+
+    
+    printMST(parent, V, key);
+
+   
+    free(minHeap->array);
+    free(minHeap->pos);
+    free(minHeap);
+}
+
+
+33.	Write a C Program to implement Dijkstra’s algorithm in which a graph is represented using an adjacency matrix.
+
+#include <stdio.h>
+#include <limits.h>
+
+#define V 3
+
+int minDistance(int dist[], int sptSet[]) {
+    int min = INT_MAX, min_index;
+
+    for (int v = 0; v < V; v++) {
+        if (sptSet[v] == 0 && dist[v] <= min) {
+            min = dist[v];
+            min_index = v;
+        }
+    }
+
+    return min_index;
+}
+
+void printSolution(int dist[]) {
+    printf("Vertex \t Distance from Source\n");
+    for (int i = 0; i < V; i++) {
+        printf("%d \t %d\n", i, dist[i]);
+    }
+}
+
+void dijkstra(int graph[V][V], int src) {
+    int dist[V];
+    int sptSet[V];
+
+    for (int i = 0; i < V; i++) {
+        dist[i] = INT_MAX;
+        sptSet[i] = 0;
+    }
+
+    dist[src] = 0;
+
+    for (int count = 0; count < V - 1; count++) {
+        int u = minDistance(dist, sptSet);
+
+        sptSet[u] = 1;
+
+        for (int v = 0; v < V; v++) {
+            if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX &&
+                dist[u] + graph[u][v] < dist[v]) {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+
+    printSolution(dist);
+}
+
+int main() {
+    int graph[V][V];
+
+    // Taking input for the graph
+    printf("Enter the adjacency matrix for the graph (%d x %d):\n", V, V);
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            scanf("%d", &graph[i][j]);
+        }
+    }
+
+    int source;
+
+    // Taking input for the source vertex
+    printf("Enter the source vertex (0 to %d): ", V - 1);
+    scanf("%d", &source);
+
+    dijkstra(graph, source);
+
+    return 0;
+}
+
+
+
+34.	Write a C program to accept a graph from the user, represent it in adjacency list and traverse it in-order
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+struct Graph {
+    int vertices;
+    struct Node** adjacencyList;
+};
+
+// Function to create a new node
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Function to create a graph with the given number of vertices
+struct Graph* createGraph(int vertices) {
+    struct Graph* graph = (struct Graph*)malloc(sizeof(struct Graph));
+    graph->vertices = vertices;
+    graph->adjacencyList = (struct Node**)malloc(vertices * sizeof(struct Node*));
+
+    // Initialize adjacency lists
+    for (int i = 0; i < vertices; ++i) {
+        graph->adjacencyList[i] = NULL;
+    }
+
+    return graph;
+}
+
+// Function to add an edge to an undirected graph
+void addEdge(struct Graph* graph, int src, int dest) {
+    // Add an edge from src to dest
+    struct Node* newNode = createNode(dest);
+    newNode->next = graph->adjacencyList[src];
+    graph->adjacencyList[src] = newNode;
+
+    // Since the graph is undirected, add an edge from dest to src
+    newNode = createNode(src);
+    newNode->next = graph->adjacencyList[dest];
+    graph->adjacencyList[dest] = newNode;
+}
+
+// Function to perform in-order traversal of the graph
+void inorderTraversal(struct Graph* graph, int vertex, int visited[]) {
+    visited[vertex] = 1;
+    printf("%d ", vertex);
+
+    struct Node* current = graph->adjacencyList[vertex];
+    while (current != NULL) {
+        if (!visited[current->data]) {
+            inorderTraversal(graph, current->data, visited);
+        }
+        current = current->next;
+    }
+}
+
+int main() {
+    int vertices, edges, src, dest;
+
+    printf("Enter the number of vertices in the graph: ");
+    scanf("%d", &vertices);
+
+    printf("Enter the number of edges in the graph: ");
+    scanf("%d", &edges);
+
+    struct Graph* graph = createGraph(vertices);
+
+    printf("Enter the edges (src dest):\n");
+    for (int i = 0; i < edges; ++i) {
+        scanf("%d %d", &src, &dest);
+        addEdge(graph, src, dest);
+    }
+
+    int* visited = (int*)malloc(vertices * sizeof(int));
+
+    printf("In-order Traversal of the Graph:\n");
+    for (int i = 0; i < vertices; ++i) {
+        if (!visited[i]) {
+            inorderTraversal(graph, i, visited);
+        }
+    }
+
+    free(visited);
+
+    return 0;
+}
+
+
+
+35.	Write a C program to accept a graph from user, represent in adjacency matrix and traverse it in-order
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to perform in-order traversal of the graph represented by an adjacency matrix
+void inorderTraversal(int** adjacencyMatrix, int vertices, int vertex, int visited[]) {
+    visited[vertex] = 1;
+    printf("%d ", vertex);
+
+    for (int i = 0; i < vertices; ++i) {
+        if (adjacencyMatrix[vertex][i] && !visited[i]) {
+            inorderTraversal(adjacencyMatrix, vertices, i, visited);
+        }
+    }
+}
+
+int main() {
+    int vertices, edges, src, dest;
+
+    printf("Enter the number of vertices in the graph: ");
+    scanf("%d", &vertices);
+
+    // Create an adjacency matrix
+    int** adjacencyMatrix = (int**)malloc(vertices * sizeof(int*));
+    for (int i = 0; i < vertices; ++i) {
+        adjacencyMatrix[i] = (int*)malloc(vertices * sizeof(int));
+        for (int j = 0; j < vertices; ++j) {
+            adjacencyMatrix[i][j] = 0; // Initialize the matrix with 0
+        }
+    }
+
+    printf("Enter the number of edges in the graph: ");
+    scanf("%d", &edges);
+
+    printf("Enter the edges (src dest):\n");
+    for (int i = 0; i < edges; ++i) {
+        scanf("%d %d", &src, &dest);
+        adjacencyMatrix[src][dest] = 1;
+        adjacencyMatrix[dest][src] = 1; // Since the graph is undirected
+    }
+
+    int* visited = (int*)malloc(vertices * sizeof(int));
+
+    printf("In-order Traversal of the Graph:\n");
+    for (int i = 0; i < vertices; ++i) {
+        if (!visited[i]) {
+            inorderTraversal(adjacencyMatrix, vertices, i, visited);
+        }
+    }
+
+    // Free dynamically allocated memory
+    for (int i = 0; i < vertices; ++i) {
+        free(adjacencyMatrix[i]);
+    }
+    free(adjacencyMatrix);
+    free(visited);
+
+    return 0;
+}
+
+
+
+
+
+
+
